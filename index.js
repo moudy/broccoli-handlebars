@@ -1,7 +1,10 @@
 'use strict';
 
+var path = require('path');
+var fs = require('fs');
 var Filter = require('broccoli-filter');
 var Handlebars = require('handlebars');
+var walkSync = require('walk-sync');
 
 var HandlebarsFilter = function (inputTree, options) {
 
@@ -9,11 +12,38 @@ var HandlebarsFilter = function (inputTree, options) {
     return new HandlebarsFilter(inputTree, options);
   }
 
-  Handlebars.registerHelper(options.helpers || {});
+  this.inputTree = inputTree;
+
   this.options = options || {};
   this.context = options.context || {};
   this.handlebars = options.handlebars || Handlebars;
-  this.inputTree = inputTree;
+  if (options.helpers) {
+    this.handlebars.registerHelper(options.helpers);
+  }
+
+  var partials = options.partials;
+  var partialsPath;
+  var partialsObj;
+  var extensionRegex;
+  var files;
+
+  if (partials) {
+    if ('string' === typeof partials) {
+      extensionRegex = new RegExp('.('+this.extensions.join('|')+')');
+      partialsObj = {};
+      partialsPath = path.join(process.cwd(), partials);
+      files = walkSync(partialsPath).filter(extensionRegex.test.bind(extensionRegex));
+
+      files.forEach(function (file) {
+        var key = file.replace(partialsPath, '').replace(extensionRegex, '');
+        var filePath = path.join(partialsPath, file);
+        partialsObj[key] = fs.readFileSync(filePath).toString();
+      });
+    } else {
+      partialsObj = partials;
+    }
+    this.handlebars.registerPartial(partialsObj);
+  }
 };
 
 HandlebarsFilter.prototype = Object.create(Filter.prototype);

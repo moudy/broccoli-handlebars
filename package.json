@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "broccoli-filter": "^0.1.6",
-    "handlebars": "^2.0.0-alpha.4"
+    "handlebars": "^2.0.0-alpha.4",
+    "walk-sync": "^0.1.2"
   }
 }
