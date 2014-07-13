@@ -1,13 +1,15 @@
 {
   "name": "broccoli-handlebars",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Compile handlebars templates with helpers and dynamic contexts",
+  "repository": "https://github.com/moudy/broccoli-handlebars",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "broccoli-plugin"
+  , "handlebars"
   ],
   "author": "Moudy",
   "license": "MIT",
