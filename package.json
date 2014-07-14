@@ -8,14 +8,15 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "broccoli-plugin"
-  , "handlebars"
+    "broccoli-plugin",
+    "handlebars"
   ],
   "author": "Moudy",
   "license": "MIT",
   "dependencies": {
     "broccoli-filter": "^0.1.6",
     "handlebars": "^2.0.0-alpha.4",
+    "rsvp": "^3.0.9",
     "walk-sync": "^0.1.2"
   }
 }

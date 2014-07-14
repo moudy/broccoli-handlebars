@@ -5,6 +5,8 @@ var fs = require('fs');
 var Filter = require('broccoli-filter');
 var Handlebars = require('handlebars');
 var walkSync = require('walk-sync');
+var RSVP = require('rsvp');
+var Promise = RSVP.Promise;
 
 var HandlebarsFilter = function (inputTree, options) {
 
@@ -53,14 +55,10 @@ HandlebarsFilter.prototype.extensions = ['hbs', 'handlebars'];
 HandlebarsFilter.prototype.targetExtension = 'html';
 
 HandlebarsFilter.prototype.processString = function (str, file) {
-  var context = this.context;
-
-  if ('function' === typeof context) {
-    context = context(file);
-  }
-
   var template = this.handlebars.compile(str);
-  return template(context);
+  var context = this.context;
+  if ('function' !== typeof context) return template(context);
+  return Promise.resolve(context(file)).then(template);
 };
 
 module.exports = HandlebarsFilter;
