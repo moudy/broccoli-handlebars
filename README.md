@@ -1,6 +1,6 @@
 # Broccoli Handlebars
 
-[Broccoli](https://github.com/broccolijs/broccoli) plugin for compiling handlebars templates that supports using an existing Handlebars instance, partials, helpers, and render context based on the filename.
+[Broccoli](https://github.com/broccolijs/broccoli) plugin for compiling handlebars templates that supports using an existing Handlebars instance, partials, helpers, and asynchronous render context based on the filename.
 
 ### Install
 ```
@@ -25,7 +25,7 @@ var tree = broccoliHandlebars(tree, {
 ### Options
 
 #### context (optional)
-A function or object used as the render context. The function is passed the filename allowing for dynamic contexts.
+A function or object used as the render context. The function is passed the filename allowing for dynamic contexts. The function may return a value directly or a promise the resolves to a value.
 ```
 function RenderContext () {}
 
@@ -40,8 +40,12 @@ var renderContext = new RenderContext();
 var tree = broccoliHandlebars(tree, {
   // An object that is the same for each file
   context: { title: 'Foo' }
+
   // or renter data based on the file name
   context: renderContext.render.bind(renderContext)
+
+  // or return a promise
+  context: function () { return $.getJSON('/data.json'); }
 });
 ```
 
