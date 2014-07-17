@@ -69,14 +69,9 @@ var tree = broccoliHandlebars(tree, {
 ```
 
 #### partials (optional)
-Either a string that is the path to partials or an object where the key is the name of the partial and the value is the actual partial string.
+A string that is the path to partials.
 ```
 var tree = broccoliHandlebars(tree, {
   partials: 'path/to/partials'
-  // or
-  partials: {
-    'header': '<header>foo</header'
-  , 'users/card': '<div>bar</div'
-  }
 });
 ```

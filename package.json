@@ -14,7 +14,6 @@
   "author": "Moudy",
   "license": "MIT",
   "dependencies": {
-    "broccoli-filter": "^0.1.6",
     "broccoli-kitchen-sink-helpers": "^0.2.4",
     "broccoli-writer": "^0.1.1",
     "handlebars": "^2.0.0-alpha.4",
