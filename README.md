@@ -64,7 +64,7 @@ var tree = broccoliHandlebars(tree, {
 
 #### helpers (optional)
 An object of helpers or a function that returns an object of helpers.
-```
+```js
 module.exports = {
   firstName: function (str) { return str.split(' ')[0]; }
 };
@@ -74,7 +74,7 @@ module.exports = {
 
 #### handelbars (optional)
 A Handlebars instance. Useful if you need to make sure you are using a specific version or have already registerd partials/helpers.
-```
+```js
 var tree = broccoliHandlebars(tree, {
   handlebars: require('handlebars')
 });
@@ -82,7 +82,7 @@ var tree = broccoliHandlebars(tree, {
 
 #### partials (optional)
 A string that is the path to partials.
-```
+```js
 var tree = broccoliHandlebars(tree, {
   partials: 'path/to/partials'
 });
