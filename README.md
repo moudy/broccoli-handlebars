@@ -16,7 +16,7 @@ var dataForFile = require('./get-view-data');
 
 var tree = 'site';
 
-var tree = broccoliHandlebars(tree, ['pages/**/*.hbs], {
+var tree = broccoliHandlebars(tree, ['pages/**/*.hbs'], {
   helpers: helpers
 , handlebars: Handlebars
 , partials: 'partials-path'
@@ -26,7 +26,7 @@ var tree = broccoliHandlebars(tree, ['pages/**/*.hbs], {
 
 ### Usage
 
-```
+```js
 var hbsTree = broccoliHandlebars(tree, [outputFiles], options);
 ```
 - **tree** - a broccoli tree or string of handlebars files to watch (including partials for example)
@@ -38,7 +38,7 @@ var hbsTree = broccoliHandlebars(tree, [outputFiles], options);
 
 #### context (optional)
 A function or object used as the render context. The function is passed the filename allowing for dynamic contexts. The function may return a value directly or a promise the resolves to a value.
-```
+```js
 function RenderContext () {}
 
 RenderContext.prototype.render = function (filename) {
