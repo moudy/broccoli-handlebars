@@ -14,13 +14,25 @@ var broccoliHandlebars = require('broccoli-handlebars');
 var helpers = require('./my-helpers-object');
 var dataForFile = require('./get-view-data');
 
-var tree = broccoliHandlebars(tree, {
+var tree = 'site';
+
+var tree = broccoliHandlebars(tree, ['pages/**/*.hbs], {
   helpers: helpers
 , handlebars: Handlebars
 , partials: 'partials-path'
 , context: function (filename) { return dataForFile(filename); };
 });
 ```
+
+### Usage
+
+```
+var hbsTree = broccoliHandlebars(tree, [outputFiles], options);
+```
+- **tree** - a broccoli tree or string of handlebars files to watch (including partials for example)
+- **outputFiles** - an array of filenames or globs that will be compiled
+- **options** - Handlebars options, see below
+
 
 ### Options
 
