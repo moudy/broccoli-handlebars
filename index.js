@@ -21,40 +21,49 @@ var HandlebarsWiter = function (inputTree, files, options) {
   this.options = options || {};
   this.context = this.options.context || {};
   this.handlebars = this.options.handlebars || Handlebars;
-  if (this.options.helpers) {
-    this.handlebars.registerHelper(options.helpers);
-  }
+
   this.loadPartials();
+  this.loadHelpers();
 };
 
 HandlebarsWiter.prototype = Object.create(Witer.prototype);
 HandlebarsWiter.prototype.constructor = HandlebarsWiter;
 
+HandlebarsWiter.prototype.loadHelpers = function () {
+  var helpers = this.options.helpers;
+  if (!helpers) return;
+
+  if ('function' === typeof helpers) helpers = helpers();
+  if ('object' !== typeof helpers) {
+    throw Error('options.helpers must be an object or a function that returns an object');
+  }
+  this.handlebars.registerHelper(helpers);
+};
+
 HandlebarsWiter.prototype.loadPartials = function () {
   var partials = this.options.partials;
   var partialsPath;
-  var partialsObj;
   var pertialFiles;
 
-  if (partials) {
-    if ('string' !== typeof partials) throw Error('options.partials must be a string');
-
-    partialsObj = {};
-    partialsPath = path.join(process.cwd(), partials);
-    pertialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
-
-    pertialFiles.forEach(function (file) {
-      var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
-      var filePath = path.join(partialsPath, file);
-      partialsObj[key] = fs.readFileSync(filePath).toString();
-    });
-    this.handlebars.registerPartial(partialsObj);
+  if (!partials) return;
+  if ('string' !== typeof partials) {
+    throw Error('options.partials must be a string');
   }
+
+  partialsPath = path.join(process.cwd(), partials);
+  pertialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
+
+  pertialFiles.forEach(function (file) {
+    var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
+    var filePath = path.join(partialsPath, file);
+    this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
+  }, this);
 };
 
 HandlebarsWiter.prototype.write = function (readTree, destDir) {
   var self = this;
   this.loadPartials();
+  this.loadHelpers();
   return readTree(this.inputTree).then(function (sourceDir) {
     var targetFiles = helpers.multiGlob(self.files, {cwd: sourceDir});
     return RSVP.all(targetFiles.map(function (targetFile) {

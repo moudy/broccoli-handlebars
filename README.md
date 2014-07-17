@@ -63,7 +63,7 @@ var tree = broccoliHandlebars(tree, {
 
 
 #### helpers (optional)
-An object of helpers
+An object of helpers or a function that returns an object of helpers.
 ```
 module.exports = {
   firstName: function (str) { return str.split(' ')[0]; }
