@@ -10,9 +10,9 @@ var Promise    = RSVP.Promise;
 
 var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
 
-var HandlebarsWiter = function (inputTree, files, options) {
-  if (!(this instanceof HandlebarsWiter)) {
-    return new HandlebarsWiter(inputTree, files, options);
+var HandlebarsWriter = function (inputTree, files, options) {
+  if (!(this instanceof HandlebarsWriter)) {
+    return new HandlebarsWriter(inputTree, files, options);
   }
 
   this.inputTree = inputTree;
@@ -26,10 +26,10 @@ var HandlebarsWiter = function (inputTree, files, options) {
   this.loadHelpers();
 };
 
-HandlebarsWiter.prototype = Object.create(Witer.prototype);
-HandlebarsWiter.prototype.constructor = HandlebarsWiter;
+HandlebarsWriter.prototype = Object.create(Witer.prototype);
+HandlebarsWriter.prototype.constructor = HandlebarsWriter;
 
-HandlebarsWiter.prototype.loadHelpers = function () {
+HandlebarsWriter.prototype.loadHelpers = function () {
   var helpers = this.options.helpers;
   if (!helpers) return;
 
@@ -40,7 +40,7 @@ HandlebarsWiter.prototype.loadHelpers = function () {
   this.handlebars.registerHelper(helpers);
 };
 
-HandlebarsWiter.prototype.loadPartials = function () {
+HandlebarsWriter.prototype.loadPartials = function () {
   var partials = this.options.partials;
   var partialsPath;
   var pertialFiles;
@@ -60,7 +60,7 @@ HandlebarsWiter.prototype.loadPartials = function () {
   }, this);
 };
 
-HandlebarsWiter.prototype.write = function (readTree, destDir) {
+HandlebarsWriter.prototype.write = function (readTree, destDir) {
   var self = this;
   this.loadPartials();
   this.loadHelpers();
@@ -81,5 +81,5 @@ HandlebarsWiter.prototype.write = function (readTree, destDir) {
   });
 };
 
-module.exports = HandlebarsWiter;
+module.exports = HandlebarsWriter;
 
