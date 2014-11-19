@@ -75,11 +75,10 @@ HandlebarsWriter.prototype.write = function (readTree, destDir) {
         var template = self.handlebars.compile(str);
         fs.writeFileSync(path.join(destDir, targetHTMLFile), template(output));
       }
-      if ('function' !== typeof self.context) write(self.context);
-      return Promise.resolve(self.context(targetFile)).then(write);
+      var output = ('function' !== typeof self.context) ? self.context : self.context(targetFile);
+      return Promise.resolve(output).then(write);
     }));
   });
 };
 
 module.exports = HandlebarsWriter;
-
