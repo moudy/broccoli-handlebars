@@ -1,6 +1,6 @@
 var path       = require('path');
 var fs         = require('fs');
-var Witer      = require('broccoli-writer');
+var Writer     = require('broccoli-writer');
 var Handlebars = require('handlebars');
 var walkSync   = require('walk-sync');
 var RSVP       = require('rsvp');
@@ -26,7 +26,7 @@ var HandlebarsWriter = function (inputTree, files, options) {
   this.loadHelpers();
 };
 
-HandlebarsWriter.prototype = Object.create(Witer.prototype);
+HandlebarsWriter.prototype = Object.create(Writer.prototype);
 HandlebarsWriter.prototype.constructor = HandlebarsWriter;
 
 HandlebarsWriter.prototype.loadHelpers = function () {
@@ -43,7 +43,7 @@ HandlebarsWriter.prototype.loadHelpers = function () {
 HandlebarsWriter.prototype.loadPartials = function () {
   var partials = this.options.partials;
   var partialsPath;
-  var pertialFiles;
+  var partialFiles;
 
   if (!partials) return;
   if ('string' !== typeof partials) {
@@ -51,9 +51,9 @@ HandlebarsWriter.prototype.loadPartials = function () {
   }
 
   partialsPath = path.join(process.cwd(), partials);
-  pertialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
+  partialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
 
-  pertialFiles.forEach(function (file) {
+  partialFiles.forEach(function (file) {
     var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
     var filePath = path.join(partialsPath, file);
     this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
@@ -75,11 +75,10 @@ HandlebarsWriter.prototype.write = function (readTree, destDir) {
         var template = self.handlebars.compile(str);
         fs.writeFileSync(path.join(destDir, targetHTMLFile), template(output));
       }
-      if ('function' !== typeof self.context) write(self.context);
-      return Promise.resolve(self.context(targetFile)).then(write);
+      var output = ('function' !== typeof self.context) ? self.context : self.context(targetFile);
+      return Promise.resolve(output).then(write);
     }));
   });
 };
 
 module.exports = HandlebarsWriter;
-
