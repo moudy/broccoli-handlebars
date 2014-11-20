@@ -1,6 +1,6 @@
 {
   "name": "broccoli-handlebars",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Compile handlebars templates with helpers and dynamic contexts",
   "repository": "https://github.com/moudy/broccoli-handlebars",
   "main": "index.js",
