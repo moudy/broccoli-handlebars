@@ -20,7 +20,8 @@ var tree = broccoliHandlebars(tree, ['pages/**/*.hbs'], {
   helpers: helpers
 , handlebars: Handlebars
 , partials: 'partials-path'
-, context: function (filename) { return dataForFile(filename); };
+, context: function (filename) { return dataForFile(filename); }
+, destFile: function (filename) { return filename.replace(/\.(hbs|handlebars)$/, ''); }
 });
 ```
 
@@ -59,6 +60,18 @@ var tree = broccoliHandlebars(tree, {
   // or return a promise
   context: function () { return $.getJSON('/data.json'); }
 });
+```
+
+#### destFile (optional)
+A function that returns the name of a Handlebars-compiled file in the Broccoli output tree. The function is called for every input file, with `filename` supplied. If no function is supplied, the default is for the .hbs or .handlebars suffix of `filename` to be replaced with .html. E.g. `example.hbs` becomes `example.html`.
+
+```js
+var tree = broccoliHandlebars(tree, {
+    destFile: function (filename) { return filename.replace(/\.(hbs|handlebars)$/, ''); }
+});
+
+// Generate output files like Rails sprockets
+// example.json.hbs -> example.json 
 ```
 
 
