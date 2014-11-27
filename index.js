@@ -20,6 +20,9 @@ var HandlebarsWriter = function (inputTree, files, options) {
 
   this.options = options || {};
   this.context = this.options.context || {};
+  this.destFile = this.options.destFile || function (filename) {
+    return filename.replace(/(hbs|handlebars)$/, 'html');
+  };
   this.handlebars = this.options.handlebars || Handlebars;
 
   this.loadPartials();
@@ -68,12 +71,11 @@ HandlebarsWriter.prototype.write = function (readTree, destDir) {
     var targetFiles = helpers.multiGlob(self.files, {cwd: sourceDir});
     return RSVP.all(targetFiles.map(function (targetFile) {
       function write (output) {
-        var targetHTMLFile = targetFile.replace(/(hbs|handlebars)$/, 'html');
-        var destFilepath = path.join(destDir, targetHTMLFile);
+        var destFilepath = path.join(destDir, self.destFile(targetFile));
         mkdirp.sync(path.dirname(destFilepath));
         var str = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
         var template = self.handlebars.compile(str);
-        fs.writeFileSync(path.join(destDir, targetHTMLFile), template(output));
+        fs.writeFileSync(destFilepath, template(output));
       }
       var output = ('function' !== typeof self.context) ? self.context : self.context(targetFile);
       return Promise.resolve(output).then(write);
