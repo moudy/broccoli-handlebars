@@ -71,12 +71,12 @@ var tree = broccoliHandlebars(tree, {
 });
 
 // Generate output files like Rails sprockets
-// example.json.hbs -> example.json 
+// example.json.hbs -> example.json
 ```
 
 
 #### helpers (optional)
-An object of helpers or a function that returns an object of helpers.
+An object of helpers, a function that returns an object of helpers or a string pointing to a folder with helpers.
 ```js
 module.exports = {
   firstName: function (str) { return str.split(' ')[0]; }
@@ -84,6 +84,42 @@ module.exports = {
 
 // Hi {{firstName user.fullName}}
 ```
+
+##### Example of helpers in folder
+
+File structure example:
+
+    helpers
+    ├─ firstname.js
+    └─ multiple-helpers.js
+    …
+
+```js
+// firstname.js
+// The file name without extension will become the helper name.
+// Only one helper per file with this syntax.
+module.exports = function (str) {
+  return str.split(' ')[0];
+};
+```
+
+```js
+// multiple-helpers.js
+// Good for when you need to share code between helpers, call them from each other or just want to group them in files.
+module.exports = {
+  uppercase: function (str) {
+    return str.toUpperCase();
+  },
+  lowercase: function (str) {
+    return str.toLowerCase();
+  }
+}
+```
+
+You can then use these helpers in your templates like this:
+  - `{{ firstname user.fullName }}`
+  - `{{ uppercase "Make this upper case" }}`
+  - `{{ lowercase "Make this lower case" }}`
 
 #### handelbars (optional)
 A Handlebars instance. Useful if you need to make sure you are using a specific version or have already registerd partials/helpers.

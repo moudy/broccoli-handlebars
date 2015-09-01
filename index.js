@@ -8,7 +8,8 @@ var helpers    = require('broccoli-kitchen-sink-helpers');
 var mkdirp     = require('mkdirp');
 var Promise    = RSVP.Promise;
 
-var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
+var EXTENSIONS_PARTIALS_REGEX = new RegExp('.(hbs|handlebars)');
+var EXTENSIONS_HELPERS_REGEX = new RegExp('.js');
 
 var HandlebarsWriter = function (inputTree, files, options) {
   if (!(this instanceof HandlebarsWriter)) {
@@ -36,11 +37,31 @@ HandlebarsWriter.prototype.loadHelpers = function () {
   var helpers = this.options.helpers;
   if (!helpers) return;
 
-  if ('function' === typeof helpers) helpers = helpers();
-  if ('object' !== typeof helpers) {
-    throw Error('options.helpers must be an object or a function that returns an object');
+  switch (typeof helpers) {
+    case 'function':
+      helpers = helpers();
+      break;
+    case 'object':
+      this.handlebars.registerHelper(helpers);
+      break;
+    case 'string':
+      helpersPath = path.join(process.cwd(), helpers);
+      helperFiles = walkSync(helpersPath).filter(EXTENSIONS_HELPERS_REGEX.test.bind(EXTENSIONS_HELPERS_REGEX));
+
+      helperFiles.forEach(function (file) {
+        var filePath = path.join(helpersPath, file);
+        var helper = require(filePath);
+        if ('function' === typeof helper) {
+          var key = file.replace(helpersPath, '').replace(EXTENSIONS_HELPERS_REGEX, '');
+          this.handlebars.registerHelper(key, helper);
+        } else if ('object' === typeof helper) {
+          this.handlebars.registerHelper(helper);
+        }
+      }, this);
+      break;
+    default:
+      throw Error('options.helpers must be an object, a function that returns an object or a string');
   }
-  this.handlebars.registerHelper(helpers);
 };
 
 HandlebarsWriter.prototype.loadPartials = function () {
@@ -54,10 +75,10 @@ HandlebarsWriter.prototype.loadPartials = function () {
   }
 
   partialsPath = path.join(process.cwd(), partials);
-  partialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
+  partialFiles = walkSync(partialsPath).filter(EXTENSIONS_PARTIALS_REGEX.test.bind(EXTENSIONS_PARTIALS_REGEX));
 
   partialFiles.forEach(function (file) {
-    var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
+    var key = file.replace(partialsPath, '').replace(EXTENSIONS_PARTIALS_REGEX, '');
     var filePath = path.join(partialsPath, file);
     this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
   }, this);
