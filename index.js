@@ -27,6 +27,7 @@ var HandlebarsWriter = function (inputTree, files, options) {
 
   this.loadPartials();
   this.loadHelpers();
+  this.loadLayouts();
 };
 
 HandlebarsWriter.prototype = Object.create(Writer.prototype);
@@ -43,8 +44,8 @@ HandlebarsWriter.prototype.loadHelpers = function () {
   this.handlebars.registerHelper(helpers);
 };
 
-HandlebarsWriter.prototype.loadPartials = function () {
-  var partials = this.options.partials;
+HandlebarsWriter.prototype.loadPartials = function (partials) {
+  partials = partials || this.options.partials;
   var partialsPath;
   var partialFiles;
 
@@ -61,6 +62,13 @@ HandlebarsWriter.prototype.loadPartials = function () {
     var filePath = path.join(partialsPath, file);
     this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
   }, this);
+};
+
+HandlebarsWriter.prototype.loadLayouts = function () {
+  var layouts = this.options.layouts;
+  if (!layouts) return;
+
+  this.loadPartials(layouts);
 };
 
 HandlebarsWriter.prototype.write = function (readTree, destDir) {
