@@ -19,7 +19,7 @@ var tree = 'site';
 var tree = broccoliHandlebars(tree, ['pages/**/*.hbs'], {
   helpers: helpers
 , handlebars: Handlebars
-, partials: 'partials-path'
+, partials: 'path/to/partials/**/*.hbs'
 , context: function (filename) { return dataForFile(filename); }
 , destFile: function (filename) { return filename.replace(/\.(hbs|handlebars)$/, ''); }
 });
@@ -71,19 +71,67 @@ var tree = broccoliHandlebars(tree, {
 });
 
 // Generate output files like Rails sprockets
-// example.json.hbs -> example.json 
+// example.json.hbs -> example.json
 ```
 
-
 #### helpers (optional)
-An object of helpers or a function that returns an object of helpers.
+Can be:
+- A string that points to a folder with helpers relative to the current directory, which usually is where `Brocfile.js` lives.
+- An array of above strings
+- An object of helpers
+- A function that returns an object of helpers.
+
+Globs are supported for strings.
+
+##### Example of function that returns an object
 ```js
+// my-helpers-object.js
+// Exports an object of helpers.
 module.exports = {
   firstName: function (str) { return str.split(' ')[0]; }
 };
 
 // Hi {{firstName user.fullName}}
+
 ```
+
+##### Example of helpers in folder
+
+File structure example:
+
+    helpers
+    ├─ firstname.js
+    └─ multiple-helpers.js
+    …
+
+```js
+// firstname.js
+// The file name without extension will become the helper name.
+// Only one helper per file with this syntax.
+module.exports = function (str) {
+  return str.split(' ')[0];
+};
+```
+
+```js
+// multiple-helpers.js
+// Good for when you need to share code between helpers, call them from each other or just want to group them in files.
+module.exports = {
+  uppercase: function (str) { return str.toUpperCase(); }
+, lowercase: function (str) { return str.toLowerCase(); }
+};
+```
+
+```js
+var tree = broccoliHandlebars(tree, {
+  helpers: 'path/to/helpers/**/*.hbs'
+});
+```
+
+You can then use these helpers in your templates like this:
+  - `{{firstname user.fullName}}`
+  - `{{uppercase "Make this upper case"}}`
+  - `{{lowercase "Make this lower case"}}`
 
 #### handelbars (optional)
 A Handlebars instance. Useful if you need to make sure you are using a specific version or have already registerd partials/helpers.
@@ -94,9 +142,14 @@ var tree = broccoliHandlebars(tree, {
 ```
 
 #### partials (optional)
-A string that is the path to partials.
+Can be:
+- A string that points to a folder with partials relative to the current directory, which usually is where `Brocfile.js` lives.
+- An array of above strings
+
+Globs are supported for strings.
+
 ```js
 var tree = broccoliHandlebars(tree, {
-  partials: 'path/to/partials'
+  partials: 'path/to/partials/**/*.hbs'
 });
 ```

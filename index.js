@@ -1,5 +1,6 @@
 var path       = require('path');
 var fs         = require('fs');
+var util       = require('util');
 var Writer     = require('broccoli-writer');
 var Handlebars = require('handlebars');
 var walkSync   = require('walk-sync');
@@ -8,7 +9,9 @@ var helpers    = require('broccoli-kitchen-sink-helpers');
 var mkdirp     = require('mkdirp');
 var Promise    = RSVP.Promise;
 
-var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
+var getKey = function (str) {
+  return path.basename(str, path.extname(str));
+};
 
 var HandlebarsWriter = function (inputTree, files, options) {
   if (!(this instanceof HandlebarsWriter)) {
@@ -36,10 +39,35 @@ HandlebarsWriter.prototype.loadHelpers = function () {
   var helpers = this.options.helpers;
   if (!helpers) return;
 
-  if ('function' === typeof helpers) helpers = helpers();
-  if ('object' !== typeof helpers) {
-    throw Error('options.helpers must be an object or a function that returns an object');
+  if ('string' === typeof helpers) helpers = [helpers];
+
+  if (util.isArray(helpers)) {
+    helpersPath = process.cwd();
+    helperFiles = walkSync(helpersPath, helpers);
+
+    helpers = {};
+    helperFiles.forEach(function (file) {
+      var filePath = path.join(helpersPath, file);
+      var helper = require(filePath);
+      var key;
+
+      if ('function' === typeof helper) {
+        key = getKey(file);
+        helpers[key] = helper;
+      } else if ('object' === typeof helper) {
+        for (key in helper) {
+          helpers[key] = helper[key];
+        }
+      }
+    }, this);
+  } else if ('function' === typeof helpers) {
+    helpers = helpers();
   }
+
+  if ('object' !== typeof helpers) {
+    throw Error('options.helpers must be a string, an array of strings, an object or a function');
+  }
+
   this.handlebars.registerHelper(helpers);
 };
 
@@ -49,15 +77,17 @@ HandlebarsWriter.prototype.loadPartials = function () {
   var partialFiles;
 
   if (!partials) return;
-  if ('string' !== typeof partials) {
-    throw Error('options.partials must be a string');
+
+  if ('string' === typeof partials) {
+    partials = [partials];
+  } else if (!util.isArray(partials)) {
+    throw Error('options.partials must be a string or an array of strings');
   }
 
-  partialsPath = path.join(process.cwd(), partials);
-  partialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
-
+  partialsPath = process.cwd();
+  partialFiles = walkSync(partialsPath, partials);
   partialFiles.forEach(function (file) {
-    var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
+    var key = getKey(file);
     var filePath = path.join(partialsPath, file);
     this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
   }, this);
