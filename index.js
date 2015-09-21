@@ -1,53 +1,67 @@
 var path       = require('path');
 var fs         = require('fs');
 var util       = require('util');
-var Writer     = require('broccoli-writer');
+var Plugin     = require('broccoli-plugin');
 var Handlebars = require('handlebars');
 var walkSync   = require('walk-sync');
 var RSVP       = require('rsvp');
-var helpers    = require('broccoli-kitchen-sink-helpers');
 var mkdirp     = require('mkdirp');
 var Promise    = RSVP.Promise;
+
+var loadedHelpers = [], loadedPartials = [];
 
 var getKey = function (str) {
   return path.basename(str, path.extname(str));
 };
 
-var HandlebarsWriter = function (inputTree, files, options) {
-  if (!(this instanceof HandlebarsWriter)) {
-    return new HandlebarsWriter(inputTree, files, options);
-  }
-
-  this.inputTree = inputTree;
-  this.files = files;
-
-  this.options = options || {};
-  this.context = this.options.context || {};
-  this.destFile = this.options.destFile || function (filename) {
+var defaultOptions = {
+  context: {},
+  destFile: function (filename) {
     return filename.replace(/(hbs|handlebars)$/, 'html');
-  };
-  this.handlebars = this.options.handlebars || Handlebars;
-
-  this.loadPartials();
-  this.loadHelpers();
+  },
+  handlebars: Handlebars
 };
 
-HandlebarsWriter.prototype = Object.create(Writer.prototype);
-HandlebarsWriter.prototype.constructor = HandlebarsWriter;
+module.exports = HandlebarsCompiler;
+HandlebarsCompiler.prototype = Object.create(Plugin.prototype);
+HandlebarsCompiler.prototype.constructor = HandlebarsCompiler;
+function HandlebarsCompiler(inputNode, files, options) {
+  if (!(this instanceof HandlebarsCompiler)) {
+    return new HandlebarsCompiler(inputNode, files, options);
+  }
 
-HandlebarsWriter.prototype.loadHelpers = function () {
+  Plugin.call(this, [inputNode]);
+
+  options = Handlebars.Utils.extend({}, defaultOptions, options || {});
+  this.options = options;
+  this.files = files;
+}
+
+HandlebarsCompiler.prototype.clearHelpers = function () {
+  var self = this;
+  loadedHelpers.forEach(function (helper) {
+    self.options.handlebars.unregisterHelper(helper);
+  });
+  loadedHelpers = [];
+};
+
+HandlebarsCompiler.prototype.loadHelpers = function () {
+  this.clearHelpers();
+
   var helpers = this.options.helpers;
   if (!helpers) return;
 
   if ('string' === typeof helpers) helpers = [helpers];
 
   if (util.isArray(helpers)) {
-    helpersPath = process.cwd();
+    helpersPath = this.inputPaths[0];
     helperFiles = walkSync(helpersPath, helpers);
+
 
     helpers = {};
     helperFiles.forEach(function (file) {
-      var filePath = path.join(helpersPath, file);
+      var filePath = fs.realpathSync(path.join(helpersPath, file));
+      delete require.cache[filePath];
       var helper = require(filePath);
       var key;
 
@@ -68,10 +82,34 @@ HandlebarsWriter.prototype.loadHelpers = function () {
     throw Error('options.helpers must be a string, an array of strings, an object or a function');
   }
 
-  this.handlebars.registerHelper(helpers);
+  this.options.handlebars.registerHelper(helpers);
+
+  loadedHelpers = Object.keys(helpers);
 };
 
-HandlebarsWriter.prototype.loadPartials = function () {
+HandlebarsCompiler.prototype.generateToc = function (files) {
+  files = files.map(function (file) {
+    if (file.indexOf('tpl/index.hbs') >= 0) return '';
+    return '<li><a href="' + file.replace(/^tpl|/, '').replace(/\.hbs$/, '.html') + '">' + path.basename(file, path.extname(file)) + '</a></li>';
+  });
+
+  this.options.handlebars.registerPartial('toc', function () {
+    var output = '<ul>' + files.join('') + '</ul>';
+    return output;
+  });
+};
+
+HandlebarsCompiler.prototype.clearPartials = function () {
+  var self = this;
+  loadedPartials.forEach(function (partial) {
+    self.options.handlebars.unregisterPartial(partial);
+  });
+  loadedPartials = [];
+};
+
+HandlebarsCompiler.prototype.loadPartials = function () {
+  this.clearPartials();
+
   var partials = this.options.partials;
   var partialsPath;
   var partialFiles;
@@ -84,33 +122,54 @@ HandlebarsWriter.prototype.loadPartials = function () {
     throw Error('options.partials must be a string or an array of strings');
   }
 
-  partialsPath = process.cwd();
+  partialsPath = this.inputPaths[0];
   partialFiles = walkSync(partialsPath, partials);
   partialFiles.forEach(function (file) {
     var key = getKey(file);
     var filePath = path.join(partialsPath, file);
-    this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
+    this.options.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
+    loadedPartials.push(key);
   }, this);
 };
 
-HandlebarsWriter.prototype.write = function (readTree, destDir) {
+HandlebarsCompiler.prototype.build = function() {
   var self = this;
+  var inputPath = this.inputPaths[0];
+  var outputPath = this.outputPath;
+
+  var files = walkSync(inputPath, this.files);
+
+  this.generateToc(files);
   this.loadPartials();
   this.loadHelpers();
-  return readTree(this.inputTree).then(function (sourceDir) {
-    var targetFiles = helpers.multiGlob(self.files, {cwd: sourceDir});
-    return RSVP.all(targetFiles.map(function (targetFile) {
-      function write (output) {
-        var destFilepath = path.join(destDir, self.destFile(targetFile));
-        mkdirp.sync(path.dirname(destFilepath));
-        var str = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
-        var template = self.handlebars.compile(str);
-        fs.writeFileSync(destFilepath, template(output));
-      }
-      var output = ('function' !== typeof self.context) ? self.context : self.context(targetFile);
-      return Promise.resolve(output).then(write);
-    }));
-  });
-};
 
-module.exports = HandlebarsWriter;
+  var processFile = function (file) {
+      var context = ('function' !== typeof self.options.context) ? self.options.context : self.options.context(file, inputPath);
+      return Promise.resolve({
+        file: file,
+        context: context
+      }).then(writeFile);
+  };
+
+  var writeFile = function (obj) {
+    var file = obj.file;
+    var context = obj.context;
+
+    var destFilePath = path.join(outputPath, self.options.destFile(file));
+    mkdirp.sync(path.dirname(destFilePath));
+
+    var str = fs.readFileSync(path.join(inputPath, file)).toString();
+    var template, output;
+    try {
+      template = self.options.handlebars.compile(str);
+      output = template(context);
+    } catch(e) {
+      console.log('Failed to compile: ' + file);
+      throw e;
+    }
+
+    fs.writeFileSync(destFilePath, output);
+  };
+
+  return RSVP.all(files.map(processFile));
+};
