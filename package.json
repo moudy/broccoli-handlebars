@@ -14,11 +14,11 @@
   "author": "Moudy",
   "license": "MIT",
   "dependencies": {
-    "broccoli-kitchen-sink-helpers": "^0.2.4",
-    "broccoli-writer": "^0.1.1",
-    "handlebars": "^2.0.0-alpha.4",
-    "mkdirp": "^0.5.0",
-    "rsvp": "^3.0.9",
-    "walk-sync": "^0.1.2"
+    "broccoli-kitchen-sink-helpers": "^0.2.9",
+    "broccoli-plugin": "^1.2.0",
+    "handlebars": "^4.0.3",
+    "mkdirp": "^0.5.1",
+    "rsvp": "^3.1.0",
+    "walk-sync": "^0.2.0"
   }
 }
