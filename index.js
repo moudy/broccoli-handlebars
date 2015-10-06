@@ -99,6 +99,38 @@ HandlebarsCompiler.prototype.generateToc = function (files) {
   });
 };
 
+HandlebarsCompiler.prototype.generateHb = function (partials) {
+
+  var partials = this.options.partials,
+      partialsPath,
+      partialFiles,
+      output = '';
+
+  if (!partials) return;
+
+  if ('string' === typeof partials) {
+    partials = [partials];
+  } else if (!util.isArray(partials)) {
+    throw Error('options.partials must be a string or an array of strings');
+  }
+
+  partialsPath = this.inputPaths[0];
+  partialFiles = walkSync(partialsPath, partials);
+  partialFiles.forEach(function (file) {
+    if (file.indexOf('/compile/') >= 0) {
+      var key = getKey(file);
+      var filePath = path.join(partialsPath, file);
+      output += '<script id="' + key + '" type="text/x-handlebars-template">';
+      output += fs.readFileSync(filePath).toString();
+      output += '</script>';
+    }
+  }, this);
+
+  this.options.handlebars.registerPartial('hb', function () {
+    return output;
+  });
+};
+
 HandlebarsCompiler.prototype.clearPartials = function () {
   var self = this;
   loadedPartials.forEach(function (partial) {
@@ -140,6 +172,7 @@ HandlebarsCompiler.prototype.build = function() {
   var files = walkSync(inputPath, this.files);
 
   this.generateToc(files);
+  this.generateHb();
   this.loadPartials();
   this.loadHelpers();
 
