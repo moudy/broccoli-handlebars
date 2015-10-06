@@ -16,7 +16,7 @@
   "dependencies": {
     "broccoli-kitchen-sink-helpers": "^0.2.9",
     "broccoli-plugin": "^1.2.0",
-    "handlebars": "^4.0.2",
+    "handlebars": "^4.0.3",
     "mkdirp": "^0.5.1",
     "rsvp": "^3.1.0",
     "walk-sync": "^0.2.0"
