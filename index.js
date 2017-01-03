@@ -12,7 +12,7 @@ var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
 
 HandlebarsWriter.prototype = Object.create(Plugin.prototype);
 HandlebarsWriter.prototype.constructor = HandlebarsWriter;
-function HandlebarsWriter(inputNodes, files, options) {
+function HandlebarsWriter(inputNodes, filesGlobs, options) {
   options = options || {};
   Plugin.call(this, inputNodes, {
     annotation: options.annotation,
@@ -22,7 +22,7 @@ function HandlebarsWriter(inputNodes, files, options) {
   this.options = options;
 
   this.inputNodes = inputNodes;
-  this.files = files;
+  this.filesGlobs = filesGlobs;
 
   this.context = this.options.context || {};
   this.destFile = this.options.destFile || function (filename) {
@@ -34,7 +34,7 @@ function HandlebarsWriter(inputNodes, files, options) {
   this.loadHelpers();
 };
 
-HandlebarsWriter.prototype.loadHelpers = function () {
+HandlebarsWriter.prototype.loadHelpers = function() {
   var helpers = this.options.helpers;
   if (!helpers) return;
 
@@ -45,7 +45,7 @@ HandlebarsWriter.prototype.loadHelpers = function () {
   this.handlebars.registerHelper(helpers);
 };
 
-HandlebarsWriter.prototype.loadPartials = function () {
+HandlebarsWriter.prototype.loadPartials = function() {
   var partials = this.options.partials;
   var partialsPath;
   var partialFiles;
@@ -82,7 +82,7 @@ HandlebarsWriter.prototype.build = function() {
   this.loadHelpers();
 
   for (let sourceDir of this.inputPaths) {
-    let targetFiles = helpers.multiGlob(this.files, {cwd: sourceDir});
+    let targetFiles = helpers.multiGlob(this.filesGlobs, {cwd: sourceDir});
   
     for (let targetFile of targetFiles) {
       let context = ('function' !== typeof this.context) ?
