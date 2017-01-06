@@ -1,6 +1,6 @@
 var path       = require('path');
 var fs         = require('fs');
-var Writer     = require('broccoli-writer');
+var Plugin     = require('broccoli-plugin');
 var Handlebars = require('handlebars');
 var walkSync   = require('walk-sync');
 var RSVP       = require('rsvp');
@@ -10,15 +10,20 @@ var Promise    = RSVP.Promise;
 
 var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
 
-var HandlebarsWriter = function (inputTree, files, options) {
-  if (!(this instanceof HandlebarsWriter)) {
-    return new HandlebarsWriter(inputTree, files, options);
-  }
+HandlebarsWriter.prototype = Object.create(Plugin.prototype);
+HandlebarsWriter.prototype.constructor = HandlebarsWriter;
+function HandlebarsWriter(inputNodes, filesGlobs, options) {
+  options = options || {};
+  Plugin.call(this, inputNodes, {
+    annotation: options.annotation,
+    needsCache: false
+  });
+  options.name = 'broccoli-handlebars';
+  this.options = options;
 
-  this.inputTree = inputTree;
-  this.files = files;
+  this.inputNodes = inputNodes;
+  this.filesGlobs = filesGlobs;
 
-  this.options = options || {};
   this.context = this.options.context || {};
   this.destFile = this.options.destFile || function (filename) {
     return filename.replace(/(hbs|handlebars)$/, 'html');
@@ -29,10 +34,7 @@ var HandlebarsWriter = function (inputTree, files, options) {
   this.loadHelpers();
 };
 
-HandlebarsWriter.prototype = Object.create(Writer.prototype);
-HandlebarsWriter.prototype.constructor = HandlebarsWriter;
-
-HandlebarsWriter.prototype.loadHelpers = function () {
+HandlebarsWriter.prototype.loadHelpers = function() {
   var helpers = this.options.helpers;
   if (!helpers) return;
 
@@ -43,7 +45,7 @@ HandlebarsWriter.prototype.loadHelpers = function () {
   this.handlebars.registerHelper(helpers);
 };
 
-HandlebarsWriter.prototype.loadPartials = function () {
+HandlebarsWriter.prototype.loadPartials = function() {
   var partials = this.options.partials;
   var partialsPath;
   var partialFiles;
@@ -63,24 +65,33 @@ HandlebarsWriter.prototype.loadPartials = function () {
   }, this);
 };
 
-HandlebarsWriter.prototype.write = function (readTree, destDir) {
-  var self = this;
+HandlebarsWriter.prototype.writeTemplateSync = function(sourceDir, outputPath, targetFile, context) {
+  // create output folder for the targetFile (the template)
+  var destFilepath = path.join(outputPath, this.destFile(targetFile));
+  mkdirp.sync(path.dirname(destFilepath));
+
+  // load and compile
+  var templateStr = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
+  var template = this.handlebars.compile(templateStr);
+
+  fs.writeFileSync(destFilepath, template(context));
+};
+
+HandlebarsWriter.prototype.build = function() {
   this.loadPartials();
   this.loadHelpers();
-  return readTree(this.inputTree).then(function (sourceDir) {
-    var targetFiles = helpers.multiGlob(self.files, {cwd: sourceDir});
-    return RSVP.all(targetFiles.map(function (targetFile) {
-      function write (output) {
-        var destFilepath = path.join(destDir, self.destFile(targetFile));
-        mkdirp.sync(path.dirname(destFilepath));
-        var str = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
-        var template = self.handlebars.compile(str);
-        fs.writeFileSync(destFilepath, template(output));
-      }
-      var output = ('function' !== typeof self.context) ? self.context : self.context(targetFile);
-      return Promise.resolve(output).then(write);
-    }));
-  });
+
+  for (let sourceDir of this.inputPaths) {
+    let targetFiles = helpers.multiGlob(this.filesGlobs, {cwd: sourceDir});
+  
+    for (let targetFile of targetFiles) {
+      let context = ('function' !== typeof this.context) ?
+                    this.context :
+                    this.context(targetFile);
+
+      this.writeTemplateSync(sourceDir, this.outputPath, targetFile, context);
+    };
+  }
 };
 
 module.exports = HandlebarsWriter;
