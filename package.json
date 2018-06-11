@@ -5,7 +5,7 @@
   "repository": "https://github.com/moudy/broccoli-handlebars",
   "main": "index.js",
   "engines": {
-    "node": "^6.9.2"
+    "node": ">=6.9.2"
   },
   "scripts": {
     "pretest": "multidep test/multidep.json",
