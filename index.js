@@ -29,6 +29,7 @@ function HandlebarsWriter(inputNodes, filesGlobs, options) {
     return filename.replace(/(hbs|handlebars)$/, 'html');
   };
   this.handlebars = this.options.handlebars || Handlebars;
+  this.handlebarsOptions = this.options.handlebarsOptions;
 
   this.loadPartials();
   this.loadHelpers();
@@ -72,7 +73,7 @@ HandlebarsWriter.prototype.writeTemplateSync = function(sourceDir, outputPath, t
 
   // load and compile
   var templateStr = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
-  var template = this.handlebars.compile(templateStr);
+  var template = this.handlebars.compile(templateStr, this.handlebarsOptions);
 
   fs.writeFileSync(destFilepath, template(context));
 };

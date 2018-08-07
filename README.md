@@ -19,6 +19,7 @@ var tree = 'site';
 var tree = new BroccoliHandlebars(tree, ['pages/**/*.hbs'], {
   helpers: helpers
 , handlebars: Handlebars
+, handlebarsOptions: {strict: true}, 
 , partials: 'partials-path'
 , context: function (filename) { return dataForFile(filename); }
 , destFile: function (filename) { return filename.replace(/\.(hbs|handlebars)$/, ''); }
@@ -90,6 +91,19 @@ A Handlebars instance. Useful if you need to make sure you are using a specific 
 ```js
 var tree = new BroccoliHandlebars(tree, {
   handlebars: require('handlebars')
+});
+```
+
+#### handelbarsOptions (optional)
+
+Handlebars compile options, see: https://handlebarsjs.com/reference.html
+
+```js
+var tree = new BroccoliHandlebars(tree, {
+  handlebarsOptions: {
+    noEscape: true,
+    strict: true,
+  } 
 });
 ```
 
