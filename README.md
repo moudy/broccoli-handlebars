@@ -16,7 +16,7 @@ var dataForFile = require('./get-view-data');
 
 var tree = 'site';
 
-var tree = broccoliHandlebars(tree, ['pages/**/*.hbs'], {
+var tree = new BroccoliHandlebars(tree, ['pages/**/*.hbs'], {
   helpers: helpers
 , handlebars: Handlebars
 , partials: 'partials-path'
@@ -28,7 +28,7 @@ var tree = broccoliHandlebars(tree, ['pages/**/*.hbs'], {
 ### Usage
 
 ```js
-var hbsTree = broccoliHandlebars(tree, [outputFiles], options);
+var hbsTree = new BroccoliHandlebars(tree, [outputFiles], options);
 ```
 - **tree** - a broccoli tree or string of handlebars files to watch (including partials for example)
 - **outputFiles** - an array of filenames or globs that will be compiled
@@ -50,7 +50,7 @@ RenderContext.prototype.render = function (filename) {
 
 var renderContext = new RenderContext();
 
-var tree = broccoliHandlebars(tree, {
+var tree = new BroccoliHandlebars(tree, {
   // An object that is the same for each file
   context: { title: 'Foo' }
 
@@ -66,7 +66,7 @@ var tree = broccoliHandlebars(tree, {
 A function that returns the name of a Handlebars-compiled file in the Broccoli output tree. The function is called for every input file, with `filename` supplied. If no function is supplied, the default is for the .hbs or .handlebars suffix of `filename` to be replaced with .html. E.g. `example.hbs` becomes `example.html`.
 
 ```js
-var tree = broccoliHandlebars(tree, {
+var tree = new BroccoliHandlebars(tree, {
     destFile: function (filename) { return filename.replace(/\.(hbs|handlebars)$/, ''); }
 });
 
@@ -88,7 +88,7 @@ module.exports = {
 #### handelbars (optional)
 A Handlebars instance. Useful if you need to make sure you are using a specific version or have already registerd partials/helpers.
 ```js
-var tree = broccoliHandlebars(tree, {
+var tree = new BroccoliHandlebars(tree, {
   handlebars: require('handlebars')
 });
 ```
@@ -96,7 +96,7 @@ var tree = broccoliHandlebars(tree, {
 #### partials (optional)
 A string that is the path to partials.
 ```js
-var tree = broccoliHandlebars(tree, {
+var tree = new BroccoliHandlebars(tree, {
   partials: 'path/to/partials'
 });
 ```

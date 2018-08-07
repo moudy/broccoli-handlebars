@@ -5,7 +5,6 @@ const Plugin           = require('broccoli-plugin');
 const HandlebarsWriter = require('..');
 const Funnel           = require('broccoli-funnel');
 const Handlebars       = require('handlebars');
-const RSVP             = require('RSVP');
 const multidepRequire  = require('multidep')('test/multidep.json');
 
 describe('HandlebarsWriter | Integration tests', function() {
@@ -17,7 +16,7 @@ describe('HandlebarsWriter | Integration tests', function() {
     // Call .build on the builder and return outputPath;
     // works across Builder  versions
     function build(builder) {
-      return RSVP.Promise.resolve()
+      return Promise.resolve()
         .then(function() {
           return builder.build();
         })
