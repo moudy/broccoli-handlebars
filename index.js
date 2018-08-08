@@ -3,10 +3,8 @@ const fs         = require('fs');
 const Plugin     = require('broccoli-plugin');
 const Handlebars = require('handlebars');
 const walkSync   = require('walk-sync');
-const RSVP       = require('rsvp');
-const helpers    = require('broccoli-kitchen-sink-helpers');
+const multiGlob  = require('./multi-glob');
 const mkdirp     = require('mkdirp');
-const Promise    = RSVP.Promise;
 
 const EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
 
@@ -81,7 +79,7 @@ HandlebarsWriter.prototype.build = function() {
   this.loadHelpers();
 
   for (let sourceDir of this.inputPaths) {
-    let targetFiles = helpers.multiGlob(this.filesGlobs, {cwd: sourceDir});
+    let targetFiles = multiGlob(this.filesGlobs, {cwd: sourceDir});
   
     for (let targetFile of targetFiles) {
       let context = ('function' !== typeof this.context) ?

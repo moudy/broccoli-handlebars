@@ -18,7 +18,6 @@
   "author": "Moudy",
   "license": "MIT",
   "dependencies": {
-    "broccoli-kitchen-sink-helpers": "^0.3.1",
     "broccoli-plugin": "^1.3.0",
     "handlebars": "^4.0.11",
     "mkdirp": "^0.5.1",
