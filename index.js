@@ -1,14 +1,14 @@
-var path       = require('path');
-var fs         = require('fs');
-var Plugin     = require('broccoli-plugin');
-var Handlebars = require('handlebars');
-var walkSync   = require('walk-sync');
-var RSVP       = require('rsvp');
-var helpers    = require('broccoli-kitchen-sink-helpers');
-var mkdirp     = require('mkdirp');
-var Promise    = RSVP.Promise;
+const path       = require('path');
+const fs         = require('fs');
+const Plugin     = require('broccoli-plugin');
+const Handlebars = require('handlebars');
+const walkSync   = require('walk-sync');
+const RSVP       = require('rsvp');
+const helpers    = require('broccoli-kitchen-sink-helpers');
+const mkdirp     = require('mkdirp');
+const Promise    = RSVP.Promise;
 
-var EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
+const EXTENSIONS_REGEX = new RegExp('.(hbs|handlebars)');
 
 HandlebarsWriter.prototype = Object.create(Plugin.prototype);
 HandlebarsWriter.prototype.constructor = HandlebarsWriter;
@@ -36,7 +36,7 @@ function HandlebarsWriter(inputNodes, filesGlobs, options) {
 };
 
 HandlebarsWriter.prototype.loadHelpers = function() {
-  var helpers = this.options.helpers;
+  const helpers = this.options.helpers;
   if (!helpers) return;
 
   if ('function' === typeof helpers) helpers = helpers();
@@ -47,33 +47,31 @@ HandlebarsWriter.prototype.loadHelpers = function() {
 };
 
 HandlebarsWriter.prototype.loadPartials = function() {
-  var partials = this.options.partials;
-  var partialsPath;
-  var partialFiles;
+  const partials = this.options.partials;
 
   if (!partials) return;
   if ('string' !== typeof partials) {
     throw Error('options.partials must be a string');
   }
 
-  partialsPath = path.join(process.cwd(), partials);
-  partialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
+  const partialsPath = path.join(process.cwd(), partials);
+  const partialFiles = walkSync(partialsPath).filter(EXTENSIONS_REGEX.test.bind(EXTENSIONS_REGEX));
 
   partialFiles.forEach(function (file) {
-    var key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
-    var filePath = path.join(partialsPath, file);
+    const key = file.replace(partialsPath, '').replace(EXTENSIONS_REGEX, '');
+    const filePath = path.join(partialsPath, file);
     this.handlebars.registerPartial(key, fs.readFileSync(filePath).toString());
   }, this);
 };
 
 HandlebarsWriter.prototype.writeTemplateSync = function(sourceDir, outputPath, targetFile, context) {
   // create output folder for the targetFile (the template)
-  var destFilepath = path.join(outputPath, this.destFile(targetFile));
+  const destFilepath = path.join(outputPath, this.destFile(targetFile));
   mkdirp.sync(path.dirname(destFilepath));
 
   // load and compile
-  var templateStr = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
-  var template = this.handlebars.compile(templateStr, this.handlebarsOptions);
+  const templateStr = fs.readFileSync(path.join(sourceDir, targetFile)).toString();
+  const template = this.handlebars.compile(templateStr, this.handlebarsOptions);
 
   fs.writeFileSync(destFilepath, template(context));
 };
